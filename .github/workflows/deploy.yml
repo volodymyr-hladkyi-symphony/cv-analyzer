@@ -37,10 +37,7 @@ jobs:
       run: |
         gcloud auth configure-docker
         gcloud auth configure-docker gcr.io
-        
-        # Ensure we have the right permissions
-        echo "Checking GCR permissions..."
-        gcloud projects get-iam-policy $PROJECT_ID --flatten="bindings[].members" --format="table(bindings.role)" --filter="bindings.members:serviceAccount:github-actions-sa@cv-analyzer-474713.iam.gserviceaccount.com"
+        echo "✅ Docker authentication configured for GCR"
 
     - name: Get GKE credentials
       run: |
