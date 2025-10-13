@@ -99,3 +99,34 @@ jobs:
       if: always()
       run: |
         kubectl logs -l app=cv-analyzer --tail=20
+
+    - name: Get Backend External IP
+      id: get_backend_ip
+      run: |
+        BACKEND_IP=$(kubectl get svc cv-analyzer-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        echo "BACKEND_IP=$BACKEND_IP" >> $GITHUB_ENV
+        echo "Backend IP: $BACKEND_IP"
+
+    - name: Update nginx.conf with Backend IP
+      run: |
+        sed -i "s|http://backend:8080|http://$BACKEND_IP:8080|g" ./frontend/nginx.conf
+        cat ./frontend/nginx.conf
+
+    - name: Build and push Frontend Docker image
+      run: |
+        GIT_TAG=${GITHUB_SHA::7}
+        FRONTEND_IMAGE="gcr.io/$PROJECT_ID/cv-analyzer-frontend"
+        docker build -t $FRONTEND_IMAGE:$GIT_TAG ./frontend/
+        docker push $FRONTEND_IMAGE:$GIT_TAG
+
+    - name: Deploy Frontend to GKE
+      run: |
+        GIT_TAG=${GITHUB_SHA::7}
+        FRONTEND_IMAGE="gcr.io/$PROJECT_ID/cv-analyzer-frontend"
+        kubectl set image deployment/cv-analyzer-frontend frontend=$FRONTEND_IMAGE:$GIT_TAG
+        kubectl rollout status deployment/cv-analyzer-frontend --timeout=300s
+
+    - name: Get Frontend External IP
+      run: |
+        FRONTEND_IP=$(kubectl get svc cv-analyzer-frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        echo "Frontend External IP: http://$FRONTEND_IP"

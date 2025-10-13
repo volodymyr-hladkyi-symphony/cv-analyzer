@@ -37,6 +37,9 @@ public class SecurityConfig {
 
     @Bean
     public UserDetailsService users(PasswordEncoder passwordEncoder) {
+        if (adminUsername == null || adminUsername.isBlank() || adminPassword == null || adminPassword.isBlank()) {
+            throw new IllegalArgumentException("admin.username and admin.password must be set and not empty");
+        }
         UserDetails admin = User
                 .withUsername(adminUsername)
                 .password(passwordEncoder.encode(adminPassword))
