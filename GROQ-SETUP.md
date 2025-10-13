@@ -1,31 +1,31 @@
 # Groq Configuration for CV Analyzer
 
-## 🚀 Налаштування GitHub Actions для розгортання з Groq
+## 🚀 GitHub Actions Setup for Groq Deployment
 
-### Що було зроблено:
+### What Has Been Done:
 
-1. **Оновлено Dockerfile** - додано підтримку Groq профілю
-2. **Оновлено GitHub Actions workflows** - автоматичне використання Groq
-3. **Оновлено deploy.sh** - підтримка Spring профілів
-4. **Налаштовано змінні середовища** для Groq API
+1. **Dockerfile updated** – added Groq profile support
+2. **GitHub Actions workflows updated** – automatic Groq usage
+3. **deploy.sh updated** – Spring profiles support
+4. **Environment variables configured** for Groq API
 
-### 📋 Необхідні GitHub Secrets:
+### 📋 Required GitHub Secrets:
 
-Додайте наступні секрети в GitHub Repository Settings:
+Add the following secrets in your GitHub Repository Settings:
 
 ```
 ✅ GCP_PROJECT_ID: cv-analyzer-474713
-✅ GCP_SA_KEY: (JSON ключ Service Account)
+✅ GCP_SA_KEY: (Service Account JSON key)
 ✅ GCP_SA_EMAIL: github-actions-sa@cv-analyzer-474713.iam.gserviceaccount.com
-✅ GKE_CLUSTER_NAME: (назва вашого GKE кластера)
-✅ GKE_ZONE: (зона кластера)
-✅ GKE_REGION: (регіон кластера)
-✅ GROQ_API_KEY: (ваш Groq API ключ)
+✅ GKE_CLUSTER_NAME: (your GKE cluster name)
+✅ GKE_ZONE: (cluster zone)
+✅ GKE_REGION: (cluster region)
+✅ GROQ_API_KEY: (your Groq API key)
 ✅ ADMIN_USERNAME: admin
-✅ ADMIN_PASSWORD: (безпечний пароль)
+✅ ADMIN_PASSWORD: (secure password)
 ```
 
-### 🔧 Конфігурація Groq:
+### 🔧 Groq Configuration:
 
 #### application-groq.properties:
 ```properties
@@ -40,20 +40,20 @@ openai.pricing.input-tokens-per-million=0.59
 openai.pricing.output-tokens-per-million=0.79
 ```
 
-### 🚀 Розгортання:
+### 🚀 Deployment:
 
-#### Автоматичне розгортання:
+#### Automatic Deployment:
 ```bash
-git push origin develop  # Запустить деплой з Groq профілем
+git push origin develop  # Triggers deployment with Groq profile
 ```
 
-#### Ручне розгортання:
+#### Manual Deployment:
 1. GitHub → Actions → "Manual Deploy"
-2. Виберіть branch: `develop`
-3. Environment: `staging` або `production`
+2. Select branch: `develop`
+3. Environment: `staging` or `production`
 4. Image tag: `latest`
 
-#### Локальне розгортання:
+#### Local Deployment:
 ```bash
 cd backend
 GCP_PROJECT_ID=cv-analyzer-474713 \
@@ -62,47 +62,47 @@ GROQ_API_KEY=your-groq-key \
 ./deploy.sh
 ```
 
-### 📊 Моніторинг:
+### 📊 Monitoring:
 
-#### Перевірка логів:
+#### Check logs:
 ```bash
 kubectl logs -l app=cv-analyzer --tail=50
 ```
 
-#### Перевірка змінних середовища:
+#### Check environment variables:
 ```bash
 kubectl get deployment cv-analyzer -o yaml | grep -A 10 env:
 ```
 
-#### Перевірка Spring профілю:
+#### Check Spring profile:
 ```bash
 kubectl logs -l app=cv-analyzer | grep "The following profiles are active"
 ```
 
 ### 🔍 Troubleshooting:
 
-#### Помилка: "Groq API key not found"
-- Перевірте наявність `GROQ_API_KEY` в GitHub Secrets
-- Переконайтеся, що змінна передається в deployment
+#### Error: "Groq API key not found"
+- Check that `GROQ_API_KEY` is present in GitHub Secrets
+- Make sure the variable is passed to the deployment
 
-#### Помилка: "Wrong profile active"
-- Перевірте лог: `kubectl logs -l app=cv-analyzer | grep "profiles are active"`
-- Має показувати: `The following profiles are active: groq`
+#### Error: "Wrong profile active"
+- Check logs: `kubectl logs -l app=cv-analyzer | grep "profiles are active"`
+- Should show: `The following profiles are active: groq`
 
-#### Помилка: "Model not found"
-- Перевірте, що модель `llama-3.1-8b-instant` доступна в Groq
-- Спробуйте іншу модель: `mixtral-8x7b-32768`
+#### Error: "Model not found"
+- Make sure the model `llama-3.1-8b-instant` is available in Groq
+- Try another model: `mixtral-8x7b-32768`
 
-### 💡 Переваги Groq:
+### 💡 Groq Advantages:
 
-- **Швидкість**: Набагато швидше ніж OpenAI
-- **Вартість**: Дешевше за OpenAI API
-- **Якість**: Відмінна якість для аналізу CV
-- **Сумісність**: OpenAI-compatible API
+- **Speed**: Much faster than OpenAI
+- **Cost**: Cheaper than OpenAI API
+- **Quality**: Excellent for CV analysis
+- **Compatibility**: OpenAI-compatible API
 
-### 🎯 Наступні кроки:
+### 🎯 Next Steps:
 
-1. Налаштуйте GitHub Secrets
-2. Протестуйте розгортання
-3. Перевірте логи для підтвердження Groq профілю
-4. Налаштуйте моніторинг використання API
+1. Set up GitHub Secrets
+2. Test deployment
+3. Check logs to confirm Groq profile
+4. Set up API usage monitoring

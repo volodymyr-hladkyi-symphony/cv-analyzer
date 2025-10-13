@@ -1,15 +1,15 @@
-# 🔧 Виправлення: gke-gcloud-auth-plugin не встановлений
+# 🔧 Fix: gke-gcloud-auth-plugin Not Installed
 
-## ❌ Поточна помилка:
+## ❌ Current Error:
 ```
 executable gke-gcloud-auth-plugin not found
 couldn't get current server API group list
 ```
 
-## ✅ Рішення: Встановлення gke-gcloud-auth-plugin
+## ✅ Solution: Install gke-gcloud-auth-plugin
 
-### Для GitHub Actions (автоматично):
-Всі workflows тепер автоматично встановлюють plugin:
+### For GitHub Actions (automatic):
+All workflows now automatically install the plugin:
 ```yaml
 - name: Install gke-gcloud-auth-plugin
   run: |
@@ -17,115 +17,115 @@ couldn't get current server API group list
     echo "✅ gke-gcloud-auth-plugin installed"
 ```
 
-### Для локальної розробки:
+### For Local Development:
 
-#### Варіант 1: Використайте скрипт
+#### Option 1: Use the script
 ```bash
 chmod +x install-kubectl-gke.sh
 ./install-kubectl-gke.sh
 ```
 
-#### Варіант 2: Встановіть вручну
+#### Option 2: Install manually
 ```bash
-# Встановіть gke-gcloud-auth-plugin
+# Install gke-gcloud-auth-plugin
 gcloud components install gke-gcloud-auth-plugin
 
-# Встановіть kubectl (якщо не встановлений)
+# Install kubectl (if not installed)
 # Linux:
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 chmod +x kubectl
 sudo mv kubectl /usr/local/bin/
 
-# macOS (з Homebrew):
+# macOS (with Homebrew):
 brew install kubectl
 
-# macOS (без Homebrew):
+# macOS (without Homebrew):
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/darwin/amd64/kubectl"
 chmod +x kubectl
 sudo mv kubectl /usr/local/bin/
 ```
 
-## 🔄 Оновлені workflows:
+## 🔄 Updated Workflows:
 
-1. **"Deploy to GKE"** - тепер встановлює plugin
-2. **"Simple GCR Deploy"** - тепер встановлює plugin  
-3. **"Deploy to GKE (Artifact Registry)"** - тепер встановлює plugin
-4. **"Manual Deploy"** - тепер встановлює plugin
+1. **"Deploy to GKE"** - now installs the plugin
+2. **"Simple GCR Deploy"** - now installs the plugin
+3. **"Deploy to GKE (Artifact Registry)"** - now installs the plugin
+4. **"Manual Deploy"** - now installs the plugin
 
-## 🧪 Тестування:
+## 🧪 Testing:
 
-### Після встановлення plugin:
+### After installing the plugin:
 ```bash
-# Отримайте credentials для GKE кластера
+# Get credentials for your GKE cluster
 gcloud container clusters get-credentials YOUR_CLUSTER_NAME \
   --zone YOUR_ZONE \
   --project cv-analyzer-474713
 
-# Протестуйте kubectl
+# Test kubectl
 kubectl get pods
 kubectl cluster-info
 ```
 
-### В GitHub Actions:
-1. Запустіть будь-який workflow
-2. Перевірте логи - plugin має встановитися автоматично
-3. kubectl команди мають працювати
+### In GitHub Actions:
+1. Run any workflow
+2. Check logs - the plugin should be installed automatically
+3. kubectl commands should work
 
-## 🔍 Перевірка встановлення:
+## 🔍 Verification:
 
 ```bash
-# Перевірте, що plugin встановлений
+# Check that the plugin is installed
 gcloud components list --filter="name:gke-gcloud-auth-plugin"
 
-# Перевірте kubectl версію
+# Check kubectl version
 kubectl version --client
 
-# Перевірте підключення до кластера
+# Check cluster connection
 kubectl cluster-info
 ```
 
 ## 🚨 Troubleshooting:
 
-### Помилка: "gcloud components install failed"
+### Error: "gcloud components install failed"
 ```bash
-# Оновіть gcloud CLI
+# Update gcloud CLI
 gcloud components update
 
-# Спробуйте знову
+# Try again
 gcloud components install gke-gcloud-auth-plugin
 ```
 
-### Помилка: "kubectl not found"
+### Error: "kubectl not found"
 ```bash
-# Перевірте PATH
+# Check PATH
 echo $PATH
 
-# Додайте /usr/local/bin до PATH
+# Add /usr/local/bin to PATH
 export PATH=$PATH:/usr/local/bin
 
-# Перевірте kubectl
+# Check kubectl
 which kubectl
 ```
 
-### Помилка: "Still can't connect to cluster"
+### Error: "Still can't connect to cluster"
 ```bash
-# Перевірте credentials
+# Check credentials
 gcloud auth list
 
-# Перевірте проект
+# Check project
 gcloud config get-value project
 
-# Отримайте credentials знову
+# Get credentials again
 gcloud container clusters get-credentials YOUR_CLUSTER_NAME \
   --zone YOUR_ZONE \
   --project cv-analyzer-474713
 ```
 
-## 💡 Альтернативні рішення:
+## 💡 Alternative Solutions:
 
-### Якщо plugin все ще не працює:
-1. **Оновіть gcloud CLI** до останньої версії
-2. **Використайте legacy auth** (тимчасово):
+### If the plugin still doesn't work:
+1. **Update gcloud CLI** to the latest version
+2. **Use legacy auth** (temporarily):
    ```bash
    gcloud container clusters get-credentials YOUR_CLUSTER_NAME \
      --zone YOUR_ZONE \
@@ -133,21 +133,21 @@ gcloud container clusters get-credentials YOUR_CLUSTER_NAME \
      --internal-ip
    ```
 
-### Для Docker контейнерів:
+### For Docker containers:
 ```dockerfile
-# Додайте до Dockerfile
+# Add to Dockerfile
 RUN gcloud components install gke-gcloud-auth-plugin
 ```
 
-## 🎯 Наступні кроки:
+## 🎯 Next Steps:
 
-1. **Запустіть workflow знову** - plugin встановиться автоматично
-2. **Перевірте логи** - kubectl команди мають працювати
-3. **Протестуйте deployment** - перевірте статус подів
+1. **Run the workflow again** - the plugin will be installed automatically
+2. **Check logs** - kubectl commands should work
+3. **Test deployment** - check pod status
 
-## 📞 Підтримка:
+## 📞 Support:
 
-Якщо проблеми залишаються:
-1. Перевірте версію gcloud CLI: `gcloud version`
-2. Оновіть до останньої версії: `gcloud components update`
-3. Перевірте, що проект правильний: `gcloud config get-value project`
+If problems persist:
+1. Check gcloud CLI version: `gcloud version`
+2. Update to the latest version: `gcloud components update`
+3. Check that the project is correct: `gcloud config get-value project`

@@ -1,20 +1,20 @@
-# 🔧 Виправлення дозволів Google Container Registry
+# 🔧 Fixing Google Container Registry Permissions
 
-## ❌ Поточна помилка: Permission denied
+## ❌ Current Error: Permission denied
 
 ```
 denied: Permission "artifactregistry.repositories.uploadArtifacts" denied on resource "projects/***/locations/us/repositories/gcr.io"
 ```
 
-## 🚀 Рішення 1: Додайте необхідні ролі
+## 🚀 Solution 1: Add Required Roles
 
-### Виконайте команди в gcloud CLI:
+### Run these commands in gcloud CLI:
 
 ```bash
-# Встановіть проект
+# Set the project
 gcloud config set project cv-analyzer-474713
 
-# Додайте ролі для Service Account
+# Add roles for the Service Account
 gcloud projects add-iam-policy-binding cv-analyzer-474713 \
     --member="serviceAccount:github-actions-sa@cv-analyzer-474713.iam.gserviceaccount.com" \
     --role="roles/storage.admin"
@@ -32,28 +32,28 @@ gcloud projects add-iam-policy-binding cv-analyzer-474713 \
     --role="roles/storage.objectAdmin"
 ```
 
-### Або використайте скрипт:
+### Or use the script:
 ```bash
 chmod +x fix-gcr-permissions.sh
 ./fix-gcr-permissions.sh
 ```
 
-## 🔄 Рішення 2: Використайте Artifact Registry
+## 🔄 Solution 2: Use Artifact Registry
 
-Якщо Container Registry продовжує давати проблеми, використайте новий Artifact Registry:
+If Container Registry keeps causing issues, use the new Artifact Registry:
 
-### В GitHub Actions:
+### In GitHub Actions:
 1. GitHub → Actions → **"Deploy to GKE (Artifact Registry)"**
-2. Run workflow
+2. Run the workflow
 
-### Переваги Artifact Registry:
-- ✅ Новіший та надійніший
-- ✅ Кращі дозволи за замовчуванням
-- ✅ Підтримка різних форматів артефактів
+### Advantages of Artifact Registry:
+- ✅ Newer and more reliable
+- ✅ Better default permissions
+- ✅ Supports multiple artifact formats
 
-## 🔍 Перевірка дозволів
+## 🔍 Checking Permissions
 
-### Перевірте ролі Service Account:
+### Check Service Account roles:
 ```bash
 gcloud projects get-iam-policy cv-analyzer-474713 \
   --flatten="bindings[].members" \
@@ -61,7 +61,7 @@ gcloud projects get-iam-policy cv-analyzer-474713 \
   --filter="bindings.members:serviceAccount:github-actions-sa@cv-analyzer-474713.iam.gserviceaccount.com"
 ```
 
-### Має показувати:
+### Should show:
 ```
 ROLE
 roles/artifactregistry.admin
@@ -73,53 +73,53 @@ roles/storage.objectAdmin
 
 ## 🚨 Troubleshooting
 
-### Помилка: "Service account not found"
+### Error: "Service account not found"
 ```bash
-# Перевірте, що Service Account існує
+# Check that the Service Account exists
 gcloud iam service-accounts list --filter="email:github-actions-sa@cv-analyzer-474713.iam.gserviceaccount.com"
 ```
 
-### Помилка: "Permission denied"
-1. Перевірте, що ви авторизовані в gcloud:
+### Error: "Permission denied"
+1. Check that you are authenticated in gcloud:
    ```bash
    gcloud auth list
    gcloud auth login
    ```
 
-2. Перевірте, що ви маєте права власника проекту:
+2. Check that you have owner rights for the project:
    ```bash
    gcloud projects get-iam-policy cv-analyzer-474713 \
      --flatten="bindings[].members" \
      --filter="bindings.members:$(gcloud config get-value account)"
    ```
 
-### Помилка: "API not enabled"
+### Error: "API not enabled"
 ```bash
-# Увімкніть необхідні API
+# Enable required APIs
 gcloud services enable container.googleapis.com
 gcloud services enable artifactregistry.googleapis.com
 gcloud services enable storage.googleapis.com
 ```
 
-## ⏱️ Час оновлення
+## ⏱️ Update Time
 
-Після додавання ролей:
-- **Дозволи**: 1-2 хвилини
-- **Service Account**: 2-3 хвилини
-- **GitHub Actions**: негайно (при наступному запуску)
+After adding roles:
+- **Permissions**: 1-2 minutes
+- **Service Account**: 2-3 minutes
+- **GitHub Actions**: immediately (on next run)
 
-## 🎯 Наступні кроки
+## 🎯 Next Steps
 
-1. **Додайте ролі** (команди вище)
-2. **Зачекайте 2-3 хвилини** для поширення дозволів
-3. **Запустіть workflow знову**
-4. **Якщо не працює** - використайте Artifact Registry workflow
+1. **Add roles** (commands above)
+2. **Wait 2-3 minutes** for permissions to propagate
+3. **Run the workflow again**
+4. **If it still doesn't work** - use the Artifact Registry workflow
 
-## 💡 Альтернатива: Локальне тестування
+## 💡 Alternative: Local Testing
 
-Якщо проблеми з GCP продовжуються:
+If GCP issues persist:
 ```bash
-# Локальна збірка для тестування
+# Local build for testing
 cd backend
 docker build -t cv-analyzer:test .
 docker run -p 8080:8080 cv-analyzer:test
