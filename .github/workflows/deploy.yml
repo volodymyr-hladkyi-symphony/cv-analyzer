@@ -100,12 +100,32 @@ jobs:
       run: |
         kubectl logs -l app=cv-analyzer --tail=20
 
-    - name: Get Backend External IP
-      id: get_backend_ip
+    - name: Apply Backend Service manifest
+      run: kubectl apply -f ./backend/k8s/cv-analyzer-service.yaml
+
+    - name: Apply Frontend Deployment manifest
+      run: kubectl apply -f ./frontend/k8s/cv-analyzer-frontend-deployment.yaml
+
+    - name: Apply Frontend Service manifest
+      run: kubectl apply -f ./frontend/k8s/cv-analyzer-frontend-service.yaml
+
+    - name: Wait for Backend External IP
+      id: wait_backend_ip
       run: |
-        BACKEND_IP=$(kubectl get svc cv-analyzer-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-        echo "BACKEND_IP=$BACKEND_IP" >> $GITHUB_ENV
-        echo "Backend IP: $BACKEND_IP"
+        for i in {1..30}; do
+          BACKEND_IP=$(kubectl get svc cv-analyzer-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          if [ -n "$BACKEND_IP" ]; then
+            echo "BACKEND_IP=$BACKEND_IP" >> $GITHUB_ENV
+            echo "Backend IP: $BACKEND_IP"
+            break
+          fi
+          echo "Waiting for backend IP... ($i/30)"
+          sleep 10
+        done
+        if [ -z "$BACKEND_IP" ]; then
+          echo "Backend IP not assigned after waiting."
+          exit 1
+        fi
 
     - name: Update nginx.conf with Backend IP
       run: |
@@ -130,12 +150,3 @@ jobs:
       run: |
         FRONTEND_IP=$(kubectl get svc cv-analyzer-frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
         echo "Frontend External IP: http://$FRONTEND_IP"
-
-    - name: Apply Backend Service manifest
-      run: kubectl apply -f ./backend/k8s/cv-analyzer-service.yaml
-
-    - name: Apply Frontend Deployment manifest
-      run: kubectl apply -f ./frontend/k8s/cv-analyzer-frontend-deployment.yaml
-
-    - name: Apply Frontend Service manifest
-      run: kubectl apply -f ./frontend/k8s/cv-analyzer-frontend-service.yaml
