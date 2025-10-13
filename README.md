@@ -123,12 +123,13 @@ The application will be available at:
 ./docker-scripts.sh dev
 ```
 
-#### Selecting an AI profile (OpenAI vs Groq)
+#### Selecting an AI profile (OpenAI vs Groq vs Docker LLM)
 
 The backend supports multiple Spring profiles to switch AI providers:
 
 - `main` (default) – OpenAI-compatible settings from `application.properties`
 - `groq` – Uses `application-groq.properties` (Groq's OpenAI-compatible endpoint)
+- `docker-llm` – Uses `application-docker-llm.properties` (local OpenAI-compatible endpoint at `http://localhost:12434/engines`, model `ai/gemma3`, dummy API key)
 - `dev` – Development profile used by `docker-compose.dev.yml`
 
 Use any of the following methods to select a profile:
@@ -145,8 +146,14 @@ Use any of the following methods to select a profile:
 # Groq profile
 ./docker-scripts.sh start groq
 
+# Local Docker LLM profile
+./docker-scripts.sh start docker-llm
+
 # Development with Groq
 ./docker-scripts.sh dev groq
+
+# Development with local Docker LLM
+./docker-scripts.sh dev docker-llm
 ```
 
 2) With Docker Compose directly:
@@ -155,8 +162,14 @@ Use any of the following methods to select a profile:
 # Production stack with Groq
 SPRING_PROFILES_ACTIVE=groq docker-compose up -d
 
+# Production stack with local Docker LLM
+SPRING_PROFILES_ACTIVE=docker-llm docker-compose up -d
+
 # Development stack with Groq (overrides default dev)
 SPRING_PROFILES_ACTIVE=groq docker-compose -f docker-compose.dev.yml up --build
+
+# Development stack with local Docker LLM (overrides default dev)
+SPRING_PROFILES_ACTIVE=docker-llm docker-compose -f docker-compose.dev.yml up --build
 ```
 
 3) Running locally (without Docker):
@@ -164,11 +177,15 @@ SPRING_PROFILES_ACTIVE=groq docker-compose -f docker-compose.dev.yml up --build
 ```bash
 cd backend
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=groq
+
+# Locally with Docker LLM
+./mvnw spring-boot:run -Dspring-boot.run.profiles=docker-llm
 ```
 
 Notes:
 - Set `OPENAI_API_KEY` to your Groq API key when using the `groq` profile.
 - Groq profile uses base URL `https://api.groq.com/openai` and model `gemma2-9b-it` by default.
+- Docker LLM profile uses base URL `http://localhost:12434/engines`, model `ai/gemma3`, and a dummy API key. Ensure your local LLM is running and exposing an OpenAI-compatible API.
 
 ### Option 2: Local Development
 
