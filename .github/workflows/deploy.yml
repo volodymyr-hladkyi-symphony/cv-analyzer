@@ -1,0 +1,77 @@
+name: Deploy to GKE
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GAR_LOCATION: us-central1
+  SERVICE: candidate-matcher
+  REGION: ${{ secrets.GKE_REGION }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Google Auth
+      id: auth
+      uses: 'google-github-actions/auth@v2'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+    - name: Set up Cloud SDK
+      uses: 'google-github-actions/setup-gcloud@v2'
+
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker
+
+    - name: Get GKE credentials
+      run: |
+        gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} \
+          --zone ${{ secrets.GKE_ZONE }} \
+          --project $PROJECT_ID
+
+    - name: Build and push Docker image
+      run: |
+        # Generate tag from git commit
+        GIT_TAG=${GITHUB_SHA::7}
+        IMAGE_NAME="gcr.io/$PROJECT_ID/candidate-matcher"
+        
+        # Build image
+        docker build -t $IMAGE_NAME:$GIT_TAG ./backend/
+        docker build -t $IMAGE_NAME:latest ./backend/
+        
+        # Push images
+        docker push $IMAGE_NAME:$GIT_TAG
+        docker push $IMAGE_NAME:latest
+
+    - name: Deploy to GKE
+      run: |
+        GIT_TAG=${GITHUB_SHA::7}
+        IMAGE_NAME="gcr.io/$PROJECT_ID/candidate-matcher"
+        
+        # Update deployment
+        kubectl set image deployment/cv-analyzer candidate-matcher=$IMAGE_NAME:$GIT_TAG
+        
+        # Wait for rollout
+        kubectl rollout status deployment/cv-analyzer --timeout=300s
+
+    - name: Verify deployment
+      run: |
+        kubectl get pods -l app=cv-analyzer
+        kubectl get services
+
+    - name: Show logs
+      if: always()
+      run: |
+        kubectl logs -l app=cv-analyzer --tail=20
