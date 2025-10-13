@@ -139,6 +139,12 @@ jobs:
         docker build -t $FRONTEND_IMAGE:$GIT_TAG ./frontend/
         docker push $FRONTEND_IMAGE:$GIT_TAG
 
+    - name: Ensure react-router-dom version matches package.json
+      run: |
+        cd frontend
+        npm install react-router-dom@6.28.0
+        cat package-lock.json
+
     - name: Deploy Frontend to GKE
       run: |
         GIT_TAG=${GITHUB_SHA::7}
