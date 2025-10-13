@@ -32,6 +32,7 @@ EXPOSE 8080
 
 # Set environment variables
 ENV JAVA_OPTS="-Xmx512m -Xms256m"
+ENV SPRING_PROFILES_ACTIVE="groq"
 
-# Run the application
-ENTRYPOINT ["java","-jar","app.jar"]
+# Run the application with Groq profile
+ENTRYPOINT ["java","-jar","app.jar","--spring.profiles.active=groq"]

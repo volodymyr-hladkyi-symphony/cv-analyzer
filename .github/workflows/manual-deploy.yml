@@ -53,7 +53,10 @@ jobs:
       run: |
         cd backend
         chmod +x deploy.sh
-        GCP_PROJECT_ID=$PROJECT_ID IMAGE_TAG=${{ github.event.inputs.image_tag }} ./deploy.sh
+        GCP_PROJECT_ID=$PROJECT_ID \
+        IMAGE_TAG=${{ github.event.inputs.image_tag }} \
+        SPRING_PROFILES_ACTIVE=groq \
+        ./deploy.sh
 
     - name: Verify deployment
       run: |

@@ -30,7 +30,11 @@ jobs:
     - name: Run tests
       run: |
         cd backend
-        ./mvnw test
+        ./mvnw test -Dspring.profiles.active=test
+      env:
+        OPENAI_API_KEY: "test-api-key"
+        ADMIN_USERNAME: "test-admin"
+        ADMIN_PASSWORD: "test-password"
 
     - name: Build application
       run: |

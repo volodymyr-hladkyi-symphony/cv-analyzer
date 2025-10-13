@@ -6,6 +6,7 @@ PROJECT_ID=${GCP_PROJECT_ID:-"cv-analyzer-474713"}
 IMAGE_NAME="gcr.io/${PROJECT_ID}/candidate-matcher"
 IMAGE_TAG=${IMAGE_TAG:-"latest"}
 DEPLOYMENT_NAME="cv-analyzer"
+SPRING_PROFILE=${SPRING_PROFILES_ACTIVE:-"groq"}
 
 # Logging function
 log() {
@@ -23,6 +24,7 @@ fi
 log "Project ID: $PROJECT_ID"
 log "Image: ${IMAGE_NAME}:${IMAGE_TAG}"
 log "Deployment: $DEPLOYMENT_NAME"
+log "Spring Profile: $SPRING_PROFILE"
 
 # 1. Create builder for cross-platform
 log "Setting up Docker buildx..."
@@ -40,8 +42,9 @@ log "Pushing image to GCR..."
 docker push ${IMAGE_NAME}:${IMAGE_TAG}
 
 # 4. Update Deployment in GKE
-log "Updating Kubernetes deployment..."
+log "Updating Kubernetes deployment with Spring profile: $SPRING_PROFILE..."
 kubectl set image deployment/${DEPLOYMENT_NAME} candidate-matcher=${IMAGE_NAME}:${IMAGE_TAG}
+kubectl set env deployment/${DEPLOYMENT_NAME} SPRING_PROFILES_ACTIVE=${SPRING_PROFILE}
 kubectl rollout status deployment/${DEPLOYMENT_NAME} --timeout=300s
 
 # 5. Check pods

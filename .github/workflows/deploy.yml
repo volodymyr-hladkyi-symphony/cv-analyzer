@@ -48,11 +48,18 @@ jobs:
         GIT_TAG=${GITHUB_SHA::7}
         IMAGE_NAME="gcr.io/$PROJECT_ID/candidate-matcher"
         
-        # Build image
-        docker build -t $IMAGE_NAME:$GIT_TAG ./backend/
-        docker build -t $IMAGE_NAME:latest ./backend/
+        # Build image with Groq profile
+        echo "Building Docker image with Groq configuration..."
+        docker build -t $IMAGE_NAME:$GIT_TAG \
+          --build-arg SPRING_PROFILES_ACTIVE=groq \
+          ./backend/
+        
+        docker build -t $IMAGE_NAME:latest \
+          --build-arg SPRING_PROFILES_ACTIVE=groq \
+          ./backend/
         
         # Push images
+        echo "Pushing Docker images to GCR..."
         docker push $IMAGE_NAME:$GIT_TAG
         docker push $IMAGE_NAME:latest
 
@@ -61,8 +68,16 @@ jobs:
         GIT_TAG=${GITHUB_SHA::7}
         IMAGE_NAME="gcr.io/$PROJECT_ID/candidate-matcher"
         
-        # Update deployment
+        # Update deployment with Groq configuration
+        echo "Deploying to GKE with Groq profile..."
         kubectl set image deployment/cv-analyzer candidate-matcher=$IMAGE_NAME:$GIT_TAG
+        
+        # Set environment variables for Groq
+        kubectl set env deployment/cv-analyzer \
+          SPRING_PROFILES_ACTIVE=groq \
+          OPENAI_API_KEY=${{ secrets.GROQ_API_KEY }} \
+          ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME }} \
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
         
         # Wait for rollout
         kubectl rollout status deployment/cv-analyzer --timeout=300s
