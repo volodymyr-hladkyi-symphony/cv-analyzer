@@ -130,3 +130,12 @@ jobs:
       run: |
         FRONTEND_IP=$(kubectl get svc cv-analyzer-frontend-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
         echo "Frontend External IP: http://$FRONTEND_IP"
+
+    - name: Apply Backend Service manifest
+      run: kubectl apply -f ./backend/k8s/cv-analyzer-service.yaml
+
+    - name: Apply Frontend Deployment manifest
+      run: kubectl apply -f ./frontend/k8s/cv-analyzer-frontend-deployment.yaml
+
+    - name: Apply Frontend Service manifest
+      run: kubectl apply -f ./frontend/k8s/cv-analyzer-frontend-service.yaml

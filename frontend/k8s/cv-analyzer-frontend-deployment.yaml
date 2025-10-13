@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cv-analyzer-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cv-analyzer-frontend
+  template:
+    metadata:
+      labels:
+        app: cv-analyzer-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: gcr.io/cv-analyzer/cv-analyzer-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
