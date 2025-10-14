@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { ratingConfigApi } from '../utils/apiClient';
 
 const useRatingConfig = () => {
     const [ratingConfig, setRatingConfig] = useState({
@@ -21,8 +21,8 @@ const useRatingConfig = () => {
                 setLoading(true);
                 setError(null);
                 
-                const response = await axios.get('/api/rating/config');
-                setRatingConfig(response.data);
+                const data = await ratingConfigApi.getConfig();
+                setRatingConfig(data);
             } catch (err) {
                 console.error('Failed to fetch rating configuration:', err);
                 setError(err);

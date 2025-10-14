@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { adminApi } from '../utils/apiClient';
 import {
     Box,
     Button,
@@ -65,7 +65,7 @@ function AdminPage() {
         setIsLoading(true);
         setNotification({ message: '', type: '' });
         try {
-            await axios.post('/api/admin/prompts/refresh', null);
+            await adminApi.refreshPrompts();
             setNotification({ message: 'Prompts updated successfully!', type: 'success' });
             await fetchPrompts(); // Refresh the prompts list
         } catch (error) {
@@ -80,8 +80,8 @@ function AdminPage() {
         try {
             setPromptsLoading(true);
             setPromptsError('');
-            const response = await axios.get('/api/admin/prompts');
-            setPrompts(response.data);
+            const data = await adminApi.getPrompts();
+            setPrompts(data);
         } catch (err) {
             console.error('Error fetching prompts:', err);
             setPromptsError('Failed to fetch prompts. Make sure you are logged in as admin.');
@@ -94,7 +94,7 @@ function AdminPage() {
         try {
             setRefreshing(true);
             setPromptsError('');
-            await axios.post('/api/admin/prompts/refresh');
+            await adminApi.refreshPrompts();
             await fetchPrompts();
             setPromptsSuccess('Prompts refreshed successfully');
             setTimeout(() => setPromptsSuccess(''), 3000);
@@ -125,7 +125,7 @@ function AdminPage() {
     const updatePrompt = async () => {
         try {
             setPromptsError('');
-            await axios.put('/api/admin/prompts', editForm);
+            await adminApi.updatePrompt(editForm);
             await fetchPrompts();
             closeEditModal();
             setPromptsSuccess('Prompt updated successfully');
@@ -139,7 +139,7 @@ function AdminPage() {
     const resetPrompt = async (type, role) => {
         try {
             setPromptsError('');
-            await axios.post(`/api/admin/prompts/${type}/${role}/reset`);
+            await adminApi.resetPrompt(type, role);
             await fetchPrompts();
             setPromptsSuccess('Prompt reset to default successfully');
             setTimeout(() => setPromptsSuccess(''), 3000);

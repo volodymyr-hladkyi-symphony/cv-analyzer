@@ -25,9 +25,25 @@ export const API_ENDPOINTS = {
     COST_PRICING: '/api/cost/pricing',
     ADMIN_PROMPTS: '/api/admin/prompts',
     ADMIN_PROMPTS_REFRESH: '/api/admin/prompts/refresh',
+    RATING_CONFIG: '/api/rating/config',
     HEALTH: '/actuator/health',
     METRICS_OPERATIONS: '/actuator/metrics/gen_ai.client.operation',
     METRICS_TOKENS: '/actuator/metrics/gen_ai.client.token.usage',
+};
+
+/**
+ * Rating config API functions
+ */
+export const ratingConfigApi = {
+    /**
+     * Get rating config
+     * @returns {Promise<Object>} Rating config data
+     */
+    getConfig: () => 
+        handleApiRequest(
+            () => apiClient.get(API_ENDPOINTS.RATING_CONFIG),
+            'Failed to fetch rating config'
+        ),
 };
 
 /**
