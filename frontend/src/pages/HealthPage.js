@@ -23,7 +23,7 @@ import {
     Tooltip
 } from '@chakra-ui/react';
 import { InfoIcon, RepeatIcon, DragHandleIcon } from '@chakra-ui/icons';
-import axios from 'axios';
+import { healthApi, costApi } from '../utils/apiClient';
 import {
     DndContext,
     closestCenter,
@@ -165,17 +165,17 @@ function HealthPage() {
             
             // Fetch multiple metrics in parallel
             const [healthResponse, operationResponse, tokenResponse, costResponse] = await Promise.allSettled([
-                axios.get('/actuator/health'),
-                axios.get('/actuator/metrics/gen_ai.client.operation'),
-                axios.get('/actuator/metrics/gen_ai.client.token.usage'),
-                axios.get('/api/cost/metrics')
+                healthApi.getHealth(),
+                healthApi.getOperationMetrics(),
+                healthApi.getTokenMetrics(),
+                costApi.getMetrics()
             ]);
 
             const metricsData = {
-                health: healthResponse.status === 'fulfilled' ? healthResponse.value.data : null,
-                operations: operationResponse.status === 'fulfilled' ? operationResponse.value.data : null,
-                tokens: tokenResponse.status === 'fulfilled' ? tokenResponse.value.data : null,
-                cost: costResponse.status === 'fulfilled' ? costResponse.value.data : null
+                health: healthResponse.status === 'fulfilled' ? healthResponse.value : null,
+                operations: operationResponse.status === 'fulfilled' ? operationResponse.value : null,
+                tokens: tokenResponse.status === 'fulfilled' ? tokenResponse.value : null,
+                cost: costResponse.status === 'fulfilled' ? costResponse.value : null
             };
 
             setMetrics(metricsData);
