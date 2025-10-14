@@ -75,10 +75,65 @@ export const useCandidateMatching = () => {
 
         try {
             const { candidateApi } = await import('../utils/apiClient');
-            const result = await candidateApi.matchCandidates(vacancyDescription);
-            setMatches(result || []);
-            // Ensure error is cleared on successful response
-            setError(null);
+
+            // Try streaming first
+            try {
+                const response = await candidateApi.streamMatchCandidates(vacancyDescription);
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffered = '';
+                let collected = [];
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buffered += decoder.decode(value, { stream: true });
+
+                    let lines = buffered.split('\n');
+                    buffered = lines.pop() || '';
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (!trimmed) continue;
+                        try {
+                            const obj = JSON.parse(trimmed);
+                            if (obj.type === 'done') {
+                                // no-op, will finish naturally
+                            } else if (obj.type === 'error') {
+                                setError(new Error(obj.message || 'Streaming error'));
+                            } else if (obj.type === 'warn') {
+                                // Optional: surface as non-blocking warning
+                                console.warn('Stream warn:', obj.message);
+                            } else {
+                                collected = [...collected, obj];
+                                setMatches(collected);
+                            }
+                        } catch (e) {
+                            console.warn('Failed to parse NDJSON line', e);
+                        }
+                    }
+                }
+
+                // Flush any remaining buffered line
+                const last = buffered.trim();
+                if (last) {
+                    try {
+                        const obj = JSON.parse(last);
+                        if (!obj.type) {
+                            collected = [...collected, obj];
+                            setMatches(collected);
+                        }
+                    } catch (e) {
+                        console.warn('Failed to parse trailing NDJSON', e);
+                    }
+                }
+
+                setError(null);
+            } catch (streamErr) {
+                console.warn('Streaming failed, falling back to non-streaming:', streamErr);
+                const result = await candidateApi.matchCandidates(vacancyDescription);
+                setMatches(result || []);
+                setError(null);
+            }
         } catch (err) {
             console.error('Candidate matching error:', err);
             setError(err);

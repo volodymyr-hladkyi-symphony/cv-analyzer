@@ -21,6 +21,7 @@ const apiClient = axios.create({
  */
 export const API_ENDPOINTS = {
     CANDIDATE_MATCH: '/api/candidate-matcher/match',
+    CANDIDATE_MATCH_STREAM: '/api/candidate-matcher/match/stream',
     COST_METRICS: '/api/cost/metrics',
     COST_PRICING: '/api/cost/pricing',
     ADMIN_PROMPTS: '/api/admin/prompts',
@@ -94,6 +95,27 @@ export const candidateApi = {
             () => apiClient.post(API_ENDPOINTS.CANDIDATE_MATCH, { vacancyDescription }),
             'Failed to find candidates'
         ),
+
+    /**
+     * Stream candidates using NDJSON. Returns a Response object.
+     */
+    streamMatchCandidates: async (vacancyDescription) => {
+        const baseUrl = apiClient.defaults.baseURL || '';
+        const url = `${baseUrl}${API_ENDPOINTS.CANDIDATE_MATCH_STREAM}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ vacancyDescription }),
+        });
+        if (!response.ok || !response.body) {
+            const error = new Error(`Streaming request failed with status ${response.status}`);
+            error.status = response.status;
+            throw error;
+        }
+        return response;
+    },
 };
 
 /**

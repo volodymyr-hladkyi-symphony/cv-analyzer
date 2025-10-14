@@ -6,7 +6,10 @@ import com.symphony_solutions.cv_analyzer.service.AgentSummaryService;
 import com.symphony_solutions.cv_analyzer.dto.request.MatchRequestDto;
 import com.symphony_solutions.cv_analyzer.dto.response.CandidateSummaryResponseDto;
 import org.springframework.ai.retry.NonTransientAiException;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +30,7 @@ public class AgentController {
   private final ResumeService resumeService;
 
   private final AgentSummaryService agentSummaryService;
+  private final ObjectMapper objectMapper;
 
   /**
    * Returns the most relevant candidates for a given vacancy description, with LLM-generated summary and rating.
@@ -76,5 +80,76 @@ public class AgentController {
       log.error("Error in candidate matching process", e);
       throw e; // Let GlobalExceptionHandler handle it
     }
+  }
+
+  /**
+   * Streaming version of match endpoint. Emits NDJSON objects per candidate as they are ready.
+   */
+  @PostMapping(value = "/match/stream", produces = "application/x-ndjson")
+  public StreamingResponseBody matchCvsStream(@Valid @RequestBody MatchRequestDto request) {
+    return outputStream -> {
+      try {
+        var writer = outputStream;
+        List<Resume> topResumes = resumeService.findTopCandidates(request.getVacancyDescription(), 5);
+
+        for (Resume resume : topResumes) {
+          try {
+            String summary = agentSummaryService
+                .generateSummary(request.getVacancyDescription(), resume.getContent())
+                .getContent();
+            var ratingResponse = agentSummaryService
+                .generateRating(request.getVacancyDescription(), resume.getContent());
+            int rating = agentSummaryService.extractRatingFromContent(ratingResponse.getContent());
+
+            CandidateSummaryResponseDto candidate = CandidateSummaryResponseDto.builder()
+                .name(resume.getName())
+                .filename(resume.getFilename())
+                .summary(summary)
+                .rating(rating)
+                .build();
+
+            // Write one JSON object per line (NDJSON)
+            String json = objectMapper.writeValueAsString(candidate) + "\n";
+            writer.write(json.getBytes());
+            writer.flush();
+          } catch (NonTransientAiException e) {
+            // Forward AI errors as a structured event and stop streaming
+            var error = java.util.Map.of(
+                "type", "error",
+                "message", "AI service error while processing CV: " + resume.getFilename()
+            );
+            String json = objectMapper.writeValueAsString(error) + "\n";
+            writer.write(json.getBytes());
+            writer.flush();
+            throw e;
+          } catch (Exception e) {
+            // Emit non-fatal error and continue to next resume
+            var error = java.util.Map.of(
+                "type", "warn",
+                "message", "Failed to process CV: " + resume.getFilename()
+            );
+            String json = objectMapper.writeValueAsString(error) + "\n";
+            writer.write(json.getBytes());
+            writer.flush();
+          }
+        }
+
+        // Done event
+        var done = java.util.Map.of("type", "done");
+        String json = objectMapper.writeValueAsString(done) + "\n";
+        writer.write(json.getBytes());
+        writer.flush();
+      } catch (Exception ex) {
+        // Best-effort final error emission
+        try {
+          var fatal = java.util.Map.of("type", "error", "message", "Streaming failed: " + ex.getMessage());
+          String json = objectMapper.writeValueAsString(fatal) + "\n";
+          outputStream.write(json.getBytes());
+          outputStream.flush();
+        } catch (Exception ignored) {
+          // ignore
+        }
+      }
+    };
   }
 }
