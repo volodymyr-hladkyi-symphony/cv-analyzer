@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Box, Text, Flex, Tooltip } from '@chakra-ui/react';
+import { Box, Text, Flex, Tooltip, useColorModeValue } from '@chakra-ui/react';
 import { getRatingColors } from '../../utils/colorUtils';
 
 /**
@@ -28,6 +28,9 @@ const CircularRatingGauge = ({
 }) => {
     const colors = getRatingColors(rating, minRating, maxRating);
     const percentage = ((rating - minRating) / (maxRating - minRating)) * 100;
+    
+    // Color mode-aware stroke color for SVG background circle
+    const strokeColor = useColorModeValue('gray.200', 'gray.700');
     
     // Size configurations
     const sizeConfig = {
@@ -71,9 +74,8 @@ const CircularRatingGauge = ({
                         cy={config.size / 2}
                         r={radius}
                         fill="none"
-                        stroke="gray.200"
+                        stroke={strokeColor}
                         strokeWidth={config.strokeWidth}
-                        _dark={{ stroke: 'gray.700' }}
                     />
                     {/* Progress circle */}
                     <circle

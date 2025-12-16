@@ -78,9 +78,10 @@ docker-compose up --build -d
 
 ### Environment Variables
 The application uses the existing `.env` file with:
-- `OPENAI_API_KEY` - Required for AI functionality
+- `OPENAI_API_KEY` - Required for `main` and `groq` profiles only. **NOT required** for `ollama` and `docker-llm` profiles (these use local LLM services)
 - `ADMIN_USERNAME` - Admin username (default: admin)
 - `ADMIN_PASSWORD` - Admin password (default: admin)
+- `SPRING_PROFILES_ACTIVE` - Spring profile to use (`main`, `groq`, `ollama`, `docker-llm`, `dev`)
 
 ### Volume Mounts
 - CV files: `./backend/src/main/resources/cvs:/app/cvs:ro`

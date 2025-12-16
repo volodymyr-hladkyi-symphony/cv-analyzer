@@ -1,21 +1,23 @@
 package com.symphony_solutions.cv_analyzer.controller;
 
-import com.symphony_solutions.cv_analyzer.model.Resume;
-import com.symphony_solutions.cv_analyzer.service.ResumeService;
-import com.symphony_solutions.cv_analyzer.service.AgentSummaryService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.symphony_solutions.cv_analyzer.dto.request.MatchRequestDto;
 import com.symphony_solutions.cv_analyzer.dto.response.CandidateSummaryResponseDto;
-import org.springframework.ai.retry.NonTransientAiException;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.validation.annotation.Validated;
+import com.symphony_solutions.cv_analyzer.model.Resume;
+import com.symphony_solutions.cv_analyzer.service.AgentSummaryService;
+import com.symphony_solutions.cv_analyzer.service.ResumeService;
+import jakarta.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import java.util.List;
-import java.util.ArrayList;
-import jakarta.validation.Valid;
+import org.springframework.ai.retry.NonTransientAiException;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 /**
  * REST controller for matching candidates to a job vacancy.
@@ -110,7 +112,7 @@ public class AgentController {
 
             // Write one JSON object per line (NDJSON)
             String json = objectMapper.writeValueAsString(candidate) + "\n";
-            writer.write(json.getBytes());
+            writer.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             writer.flush();
           } catch (NonTransientAiException e) {
             // Forward AI errors as a structured event and stop streaming

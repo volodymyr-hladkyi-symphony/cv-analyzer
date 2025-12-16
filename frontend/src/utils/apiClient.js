@@ -98,23 +98,52 @@ export const candidateApi = {
 
     /**
      * Stream candidates using NDJSON. Returns a Response object.
+     * @param {string} vacancyDescription - Job description for matching
+     * @returns {Promise<Response>} Fetch Response object with readable stream
      */
     streamMatchCandidates: async (vacancyDescription) => {
-        const baseUrl = apiClient.defaults.baseURL || '';
+        const baseUrl = apiClient.defaults.baseURL;
+        if (!baseUrl) {
+            throw new Error('API base URL is not configured');
+        }
         const url = `${baseUrl}${API_ENDPOINTS.CANDIDATE_MATCH_STREAM}`;
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ vacancyDescription }),
-        });
-        if (!response.ok || !response.body) {
-            const error = new Error(`Streaming request failed with status ${response.status}`);
-            error.status = response.status;
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...apiClient.defaults.headers.common, // Include default headers
+                },
+                body: JSON.stringify({ vacancyDescription }),
+                signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                const error = new Error(`Failed to find candidates: Streaming request failed with status ${response.status}`);
+                error.status = response.status;
+                error.userMessage = 'Failed to find candidates';
+                throw error;
+            }
+            
+            if (!response.body) {
+                throw new Error('Failed to find candidates: Response body is not readable');
+            }
+            
+            return response;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            if (error.name === 'AbortError') {
+                const timeoutError = new Error('Failed to find candidates: Request timeout');
+                timeoutError.isTimeout = true;
+                throw timeoutError;
+            }
             throw error;
         }
-        return response;
     },
 };
 
