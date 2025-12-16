@@ -4,7 +4,7 @@ test('simple test passes', () => {
 });
 
 test('string test passes', () => {
-  expect('hello').toContain('hello');
+  expect('hello world').toContain('hello');
 });
 
 test('array test passes', () => {

@@ -15,7 +15,7 @@ public class CorsConfig {
                 registry.addMapping("/**")
                         .allowedOrigins("https://cv-analyzer-ui.onrender.com", "http://localhost:3000")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
+                        .allowedHeaders("Content-Type", "Authorization", "X-Requested-With")
                         .allowCredentials(true);
             }
         };

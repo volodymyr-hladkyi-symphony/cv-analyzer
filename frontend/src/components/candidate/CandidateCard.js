@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Box, Heading, Text, Flex } from '@chakra-ui/react';
+import { Box, Heading, Text, Flex, useColorModeValue } from '@chakra-ui/react';
 import { getRatingColors } from '../../utils/colorUtils';
 import CircularRatingGauge from '../common/CircularRatingGauge';
 import useRatingConfig from '../../hooks/useRatingConfig';
@@ -22,6 +22,9 @@ import useRatingConfig from '../../hooks/useRatingConfig';
 const CandidateCard = ({ candidate }) => {
     const { ratingConfig } = useRatingConfig();
     const colors = getRatingColors(candidate.rating, ratingConfig.minRating, ratingConfig.maxRating);
+    
+    // Color mode-aware background for summary text area
+    const summaryBg = useColorModeValue('gray.100', 'gray.700');
 
     return (
         <Box 
@@ -62,7 +65,7 @@ const CandidateCard = ({ candidate }) => {
                 as="pre" 
                 whiteSpace="pre-wrap" 
                 wordBreak="break-word" 
-                bg="rgba(0,0,0,0.25)" 
+                bg={summaryBg}
                 p={3} 
                 borderRadius="sm" 
                 fontSize="sm" 

@@ -14,8 +14,9 @@ COPY src ./src
 # Build the application
 RUN mvn clean package -DskipTests
 
-# Runtime stage
-FROM openjdk:17-slim
+# Runtime stage - using Eclipse Temurin (replacement for deprecated openjdk images)
+# Using jammy (Ubuntu 22.04) for glibc compatibility with Spring Boot
+FROM eclipse-temurin:17-jre-jammy
 
 # Set working directory
 WORKDIR /app
