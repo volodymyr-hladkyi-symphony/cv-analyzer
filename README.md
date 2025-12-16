@@ -47,12 +47,12 @@ A full-stack application that matches candidate CVs (PDF or TXT) to job vacancy 
 - Java 17+
 - Maven 3.8+
 - Node.js 18+ (for frontend)
-- An OpenAI API key (or compatible endpoint)
+- An OpenAI API key (required for `main` and `groq` profiles) **OR** Ollama installed locally (for `ollama` profile)
 
 ### Option 2: Docker (Recommended)
 - Docker
 - Docker Compose
-- An OpenAI API key (or compatible endpoint)
+- An OpenAI API key (required for `main` and `groq` profiles) **OR** Ollama installed locally (for `ollama` profile)
 
 ## Setup
 
@@ -63,13 +63,15 @@ git clone <your-repo-url>
 cd cv-analyzer
 ```
 
-2. **Add your OpenAI API key**
+2. **Add your OpenAI API key (if using OpenAI or Groq profiles)**
 
 Create a `.env` file in the project root:
 
 ```
 OPENAI_API_KEY=sk-...your-key...
 ```
+
+**Note**: `OPENAI_API_KEY` is **NOT required** for `ollama` and `docker-llm` profiles. These profiles use local LLM services.
 
 **Optional: Configure OpenAI pricing (defaults to GPT-4o pricing)**
 ```
@@ -123,12 +125,13 @@ The application will be available at:
 ./docker-scripts.sh dev
 ```
 
-#### Selecting an AI profile (OpenAI vs Groq vs Docker LLM)
+#### Selecting an AI profile (OpenAI vs Groq vs Ollama vs Docker LLM)
 
 The backend supports multiple Spring profiles to switch AI providers:
 
-- `main` (default) – OpenAI-compatible settings from `application.properties`
-- `groq` – Uses `application-groq.properties` (Groq's OpenAI-compatible endpoint)
+- `main` (default) – OpenAI-compatible settings from `application.properties` (requires `OPENAI_API_KEY`)
+- `groq` – Uses `application-groq.properties` (Groq's OpenAI-compatible endpoint, requires `OPENAI_API_KEY`)
+- `ollama` – Uses `application-ollama.properties` (local Ollama daemon, **does NOT require `OPENAI_API_KEY`**)
 - `docker-llm` – Uses `application-docker-llm.properties` (local OpenAI-compatible endpoint at `http://localhost:12434/engines`, model `ai/gemma3`, dummy API key)
 - `dev` – Development profile used by `docker-compose.dev.yml`
 
@@ -149,11 +152,17 @@ Use any of the following methods to select a profile:
 # Local Docker LLM profile
 ./docker-scripts.sh start docker-llm
 
+# Ollama profile (local Ollama daemon)
+./docker-scripts.sh start ollama
+
 # Development with Groq
 ./docker-scripts.sh dev groq
 
 # Development with local Docker LLM
 ./docker-scripts.sh dev docker-llm
+
+# Development with Ollama
+./docker-scripts.sh dev ollama
 ```
 
 2) With Docker Compose directly:
@@ -165,11 +174,17 @@ SPRING_PROFILES_ACTIVE=groq docker-compose up -d
 # Production stack with local Docker LLM
 SPRING_PROFILES_ACTIVE=docker-llm docker-compose up -d
 
+# Production stack with Ollama (local Ollama daemon)
+SPRING_PROFILES_ACTIVE=ollama docker-compose up -d
+
 # Development stack with Groq (overrides default dev)
 SPRING_PROFILES_ACTIVE=groq docker-compose -f docker-compose.dev.yml up --build
 
 # Development stack with local Docker LLM (overrides default dev)
 SPRING_PROFILES_ACTIVE=docker-llm docker-compose -f docker-compose.dev.yml up --build
+
+# Development stack with Ollama (overrides default dev)
+SPRING_PROFILES_ACTIVE=ollama docker-compose -f docker-compose.dev.yml up --build
 ```
 
 3) Running locally (without Docker):
@@ -180,12 +195,24 @@ cd backend
 
 # Locally with Docker LLM
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=docker-llm
+
+# Locally with Ollama
+./mvnw spring-boot:run -Dspring-boot.run.profiles=ollama
 ```
 
 Notes:
-- Set `OPENAI_API_KEY` to your Groq API key when using the `groq` profile.
-- Groq profile uses base URL `https://api.groq.com/openai` and model `gemma2-9b-it` by default.
-- Docker LLM profile uses base URL `http://localhost:12434/engines`, model `ai/gemma3`, and a dummy API key. Ensure your local LLM is running and exposing an OpenAI-compatible API.
+- **OpenAI API Key**: Required for `main` and `groq` profiles. **NOT required** for `ollama` and `docker-llm` profiles.
+- **Groq profile**: Uses base URL `https://api.groq.com/openai` and model `llama-3.1-8b-instant` by default. Set `OPENAI_API_KEY` to your Groq API key.
+- **Ollama profile**: 
+  - Uses local Ollama daemon at `http://host.docker.internal:11434` (from Docker) or `http://localhost:11434` (local)
+  - Default model is `gemma3:4b` (configurable in `application-ollama.properties`)
+  - **No API key required**
+  - **Setup steps**:
+    1. Install Ollama: https://ollama.ai
+    2. Start Ollama daemon: `ollama serve` (usually runs automatically)
+    3. Pull the model: `ollama pull gemma3:4b` (or another model of your choice)
+    4. Update model in `application-ollama.properties` if using a different model
+- **Docker LLM profile**: Uses base URL `http://localhost:12434/engines`, model `ai/gemma3`, and a dummy API key. Ensure your local LLM is running and exposing an OpenAI-compatible API.
 
 ### Option 2: Local Development
 
@@ -613,7 +640,7 @@ The Health & Metrics page features an advanced **drag and drop interface** that 
 
 ## Notes
 
-- The OpenAI API key is required for LLM-powered summaries and ratings.
+- **OpenAI API key**: Required for `main` and `groq` profiles. **NOT required** for `ollama` and `docker-llm` profiles (these use local LLM services).
 - The app supports both `.pdf` and `.txt` CVs.
 - Summaries and ratings are generated per candidate using the LLM.
 - **Visual ratings** are displayed as circular progress gauges (1-100 scale).

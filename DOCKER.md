@@ -6,7 +6,7 @@ This document explains how to run the CV Analyzer application using Docker and D
 
 - Docker
 - Docker Compose
-- OpenAI API Key
+- OpenAI API Key (required for `main` and `groq` profiles, **NOT required** for `ollama` and `docker-llm` profiles)
 
 ## Quick Start
 
@@ -15,10 +15,12 @@ This document explains how to run the CV Analyzer application using Docker and D
 Create a `.env` file in the root directory (if not already present):
 
 ```bash
-OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here  # Required for 'main' and 'groq' profiles only
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=admin
 ```
+
+**Note**: `OPENAI_API_KEY` is **NOT required** for `ollama` and `docker-llm` profiles. These profiles use local LLM services.
 
 ### 2. Run with Docker Compose
 
@@ -31,17 +33,22 @@ docker-compose up --build
 docker-compose up -d --build
 ```
 
-##### Selecting an AI Profile (OpenAI vs Groq vs Docker LLM)
+##### Selecting an AI Profile (OpenAI vs Groq vs Ollama vs Docker LLM)
 You can switch between AI providers by setting `SPRING_PROFILES_ACTIVE`:
 
 ```bash
-# OpenAI (default configuration)
+# OpenAI (default configuration, requires OPENAI_API_KEY)
 docker-compose up -d
 
-# Groq profile (uses application-groq.properties)
+# Groq profile (uses application-groq.properties, requires OPENAI_API_KEY)
 SPRING_PROFILES_ACTIVE=groq docker-compose up -d
 
-# Local Docker LLM profile (uses application-docker-llm.properties)
+# Ollama profile (uses application-ollama.properties, NO API key required)
+# Ensure Ollama is running locally: ollama serve
+# Pull model: ollama pull gemma3:4b
+SPRING_PROFILES_ACTIVE=ollama docker-compose up -d
+
+# Local Docker LLM profile (uses application-docker-llm.properties, NO API key required)
 SPRING_PROFILES_ACTIVE=docker-llm docker-compose up -d
 ```
 
@@ -58,6 +65,9 @@ SPRING_PROFILES_ACTIVE=groq docker-compose -f docker-compose.dev.yml up --build
 
 # Override the default dev profile with local Docker LLM
 SPRING_PROFILES_ACTIVE=docker-llm docker-compose -f docker-compose.dev.yml up --build
+
+# Override the default dev profile with Ollama (NO API key required)
+SPRING_PROFILES_ACTIVE=ollama docker-compose -f docker-compose.dev.yml up --build
 ```
 
 ### 3. Access the Application
@@ -105,6 +115,9 @@ SPRING_PROFILES_ACTIVE=groq docker-compose -f docker-compose.dev.yml up --build
 # Start development with local Docker LLM profile
 SPRING_PROFILES_ACTIVE=docker-llm docker-compose -f docker-compose.dev.yml up --build
 
+# Start development with Ollama profile (NO API key required)
+SPRING_PROFILES_ACTIVE=ollama docker-compose -f docker-compose.dev.yml up --build
+
 # View logs
 docker-compose -f docker-compose.dev.yml logs -f
 
@@ -138,9 +151,10 @@ docker-compose up -d --scale backend=2
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `OPENAI_API_KEY` | OpenAI API key (required) | - |
+| `OPENAI_API_KEY` | OpenAI API key (required for `main` and `groq` profiles, **NOT required** for `ollama` and `docker-llm`) | - |
 | `ADMIN_USERNAME` | Admin username | admin |
 | `ADMIN_PASSWORD` | Admin password | admin |
+| `SPRING_PROFILES_ACTIVE` | Spring profile to use (`main`, `groq`, `ollama`, `docker-llm`, `dev`) | - |
 
 ### Volume Mounts
 
